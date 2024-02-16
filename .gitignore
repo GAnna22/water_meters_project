@@ -1,0 +1,10 @@
+.idea/
+.venv/
+.DS_Store
+src/.DS_Store
+src/__pycache__/
+data/*
+!data/.gitkeep
+src/models/*
+!src/models/.gitkeep
+water_meters_markup.xlsx
