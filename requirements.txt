@@ -5,3 +5,5 @@ streamlit
 torch
 torchvision
 pillow
+watchdog
+

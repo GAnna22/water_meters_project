@@ -8,3 +8,5 @@ data/*
 src/models/*
 !src/models/.gitkeep
 water_meters_markup.xlsx
+canny_edge_detection.py
+canny_edge_detection2.py

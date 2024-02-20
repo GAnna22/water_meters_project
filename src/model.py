@@ -2,7 +2,7 @@ import streamlit as st
 from torchvision.utils import draw_bounding_boxes
 import torch
 from torchvision.models.detection import fasterrcnn_resnet50_fpn
-from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
+from torchvision.models.detection.faster_rcnn import FastRCNNPredictor, FasterRCNN_ResNet50_FPN_Weights
 import torchvision.transforms as transforms
 import torchvision.transforms.functional as F
 
@@ -18,7 +18,8 @@ import io
 st.title("Распознавание показаний ПУ")
 
 def give_model():
-    model = fasterrcnn_resnet50_fpn(pretrained=True, trainable_backbone_layers = 1)
+    model = fasterrcnn_resnet50_fpn(weights=FasterRCNN_ResNet50_FPN_Weights.DEFAULT,
+                                    trainable_backbone_layers = 1)
     num_classes = 2  # 1 class (watermeter) + background
     # get number of input features for the classifier
     in_features = model.roi_heads.box_predictor.cls_score.in_features
