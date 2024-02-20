@@ -69,7 +69,7 @@ if uploaded_file is not None:
     bytes_data = uploaded_file.getvalue()
     image1 = Image.open(io.BytesIO(bytes_data))
     image1 = ImageOps.exif_transpose(image1)
-    # image1.save('../data/' + uploaded_file.name)
+    image1.save('../data/' + uploaded_file.name)
     image = np.array(image1)
     SIZE_ORIGINAL = image.shape[:2]
     THRESHOLD = 0.85
@@ -156,6 +156,7 @@ if uploaded_file is not None:
             scores = prediction[0]['scores'].detach().cpu().numpy()
             boxes = prediction[0]['boxes'].detach().cpu().numpy()[scores > THRESHOLD_2]
             labels = prediction[0]['labels'].detach().cpu().numpy()[scores > THRESHOLD_2]
+            scores = scores[scores > THRESHOLD_2]
             sort_index = sorted(range(len(boxes)), key=lambda k: boxes[k][0])
             while len(sort_index) > 8:
                 boxes_diff = boxes[sort_index][1:, 0] - boxes[sort_index][:-1, 0]
