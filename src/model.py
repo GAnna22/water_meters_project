@@ -173,7 +173,7 @@ if uploaded_file is not None:
             #     box_im = np.array(new_im)[int(b[1]): int(b[3]), int(b[0]): int(b[2])]
             #     st.image(box_im)
             #     st.write(l)
-            predicted_labels = list(map(str, labels[sort_index] - 1)
+            predicted_labels = list(map(str, labels[sort_index] - 1))
             return boxes[sort_index], scores[sort_index].round(2), predicted_labels
 
         boxes, scores, predicted_labels = get_predicted_labels(prediction, new_im)
