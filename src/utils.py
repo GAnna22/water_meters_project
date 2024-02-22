@@ -44,7 +44,6 @@ import numpy as np
 def preprocess_image(img):
     # Преобразуем изображение в серой масштаб
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
     # Улучшение контраста с помощью линейной коррекции глобального среднего значения
     alpha = 1.2
     beta = -40
@@ -104,6 +103,16 @@ def canny_edge_detection(enhanced_contrast):
         mask = mask_roi(blurred_roi)
         edges = apply_mask(edges, mask)
     return edges
+
+
+def blur_image(im):
+    # Преобразование изображения в оттенки серого
+    gray_image = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+    # Применение фильтра Гаусса для уменьшения бликов
+    blurred_image = cv2.GaussianBlur(gray_image, (0, 0), 10)
+    # Восстановление цветового изображения
+    restored_image = cv2.cvtColor(blurred_image, cv2.COLOR_GRAY2BGR)
+    return restored_image
 
 def find_rotation_angle(image):
     # Функция поиска и удаления выбросов
