@@ -189,9 +189,9 @@ if uploaded_file is not None:
             boxes_median_color = []
             for b in boxes:
                 box_im = np.array(new_im)[int(b[1]): int(b[3]), int(b[0]): int(b[2])]
-                boxes_median_color.append([np.mean(box_im[:, :, 0]),
-                                           np.mean(box_im[:, :, 1]),
-                                           np.mean(box_im[:, :, 2])])
+                boxes_median_color.append([np.median(box_im[:, :, 0]),
+                                           np.median(box_im[:, :, 1]),
+                                           np.median(box_im[:, :, 2])])
             return np.array(boxes_median_color)
 
         # if len(predicted_labels) == 5:
