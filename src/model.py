@@ -165,7 +165,7 @@ if uploaded_file is not None:
 
             boxes_diff = boxes[sort_index][1:, 0] - boxes[sort_index][:-1, 0]
             boxes_diff_median = np.median(boxes_diff)
-            pop_index = np.where(boxes_diff < 0.7*boxes_diff_median)[0] + 1
+            pop_index = np.where(boxes_diff < 0.5*boxes_diff_median)[0] + 1
             for p in pop_index[::-1]:
                 sort_index.pop(p)
             # for b, l in zip(boxes[sort_index], labels[sort_index]-1):
