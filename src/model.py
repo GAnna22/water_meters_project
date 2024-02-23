@@ -165,7 +165,7 @@ if uploaded_file is not None:
 
             boxes_diff = boxes[sort_index][1:, 0] - boxes[sort_index][:-1, 0]
             boxes_diff_median = np.median(boxes_diff)
-            pop_index = np.where(boxes_diff < 0.8*boxes_diff_median)[0] + 1
+            pop_index = np.where(boxes_diff < 0.7*boxes_diff_median)[0] + 1
             for p in pop_index[::-1]:
                 sort_index.pop(p)
             # for b, l in zip(boxes[sort_index], labels[sort_index]-1):
@@ -193,47 +193,57 @@ if uploaded_file is not None:
                                            np.median(box_im[:, :, 2])])
             return np.array(boxes_median_color)
 
-        # if len(predicted_labels) == 5:
-        #     predicted_labels.append(', 0 0 0')
-        # else:
         boxes_median_color = define_dot_index(new_im, boxes)
         boxes_median_color_rot = define_dot_index(new_im_rot, boxes_rot)
-        st.write('Медианы по каждому каналу (RGB):', pd.DataFrame(boxes_median_color))
-        # st.write('Медианы по каждому каналу rot (RGB):', boxes_median_color_rot)
-        diff_between_rgb = np.array([abs(boxes_median_color[:, 1] - boxes_median_color[:, 0]),
-                                     abs(boxes_median_color[:, 2] - boxes_median_color[:, 1]),
-                                     abs(boxes_median_color[:, 2] - boxes_median_color[:, 0])
-                                     ]).T
-        diff_between_rgb_rot = np.array([abs(boxes_median_color_rot[:, 1] - boxes_median_color_rot[:, 0]),
-                                         abs(boxes_median_color_rot[:, 2] - boxes_median_color_rot[:, 1]),
-                                         abs(boxes_median_color_rot[:, 2] - boxes_median_color_rot[:, 0])
+        if len(boxes_median_color) >= 2:
+            st.write('Медианы по каждому каналу (RGB):', pd.DataFrame(boxes_median_color))
+            diff_between_rgb = np.array([abs(boxes_median_color[:, 1] - boxes_median_color[:, 0]),
+                                         abs(boxes_median_color[:, 2] - boxes_median_color[:, 1]),
+                                         abs(boxes_median_color[:, 2] - boxes_median_color[:, 0])
                                          ]).T
-        st.write('Разницы между каналами (RGB):', pd.DataFrame(diff_between_rgb))
-        # st.write('Разницы между каналами rot (RGB):', diff_between_rgb_rot)
-        diff_of_diff = abs(diff_between_rgb[1:] - diff_between_rgb[:-1])
-        diff_of_diff_rot = abs(diff_between_rgb_rot[1:] - diff_between_rgb_rot[:-1])
-        st.write('Разницы между послед. и пред.:', pd.DataFrame(diff_of_diff))
-        # st.write('Разницы между послед. и пред. rot:', diff_of_diff_rot)
-        max_index = np.argmax(diff_of_diff, axis=0)
-        st.write('max_index:', max_index)
-        max_index_rot = np.argmax(diff_of_diff_rot, axis=0)
-        # st.write('max_index_rot:', max_index_rot)
-        dot_index = max_index[np.argmax(diff_of_diff[max_index, [0, 1, 2]])] + 1
-        dot_index_rot = max_index_rot[np.argmax(diff_of_diff_rot[max_index_rot, [0, 1, 2]])] + 1
-        st.write('dot_index:', dot_index)
-        st.write('dot_index_rot:', dot_index_rot)
+            st.write('Разницы между каналами (RGB):', pd.DataFrame(diff_between_rgb))
+            diff_of_diff = abs(diff_between_rgb[1:] - diff_between_rgb[:-1])
+            st.write('Разницы между послед. и пред.:', pd.DataFrame(diff_of_diff))
+            max_index = np.argmax(diff_of_diff, axis=0)
+            st.write('max_index:', max_index)
+            dot_index = max_index[np.argmax(diff_of_diff[max_index, [0, 1, 2]])] + 1
+            st.write('dot_index:', dot_index)
+            if len(boxes_median_color_rot) >= 2:
+                # st.write('Медианы по каждому каналу rot (RGB):', boxes_median_color_rot)
+                diff_between_rgb_rot = np.array([abs(boxes_median_color_rot[:, 1] - boxes_median_color_rot[:, 0]),
+                                                 abs(boxes_median_color_rot[:, 2] - boxes_median_color_rot[:, 1]),
+                                                 abs(boxes_median_color_rot[:, 2] - boxes_median_color_rot[:, 0])
+                                                 ]).T
+                # st.write('Разницы между каналами rot (RGB):', diff_between_rgb_rot)
+                diff_of_diff_rot = abs(diff_between_rgb_rot[1:] - diff_between_rgb_rot[:-1])
+                # st.write('Разницы между послед. и пред. rot:', diff_of_diff_rot)
+                max_index_rot = np.argmax(diff_of_diff_rot, axis=0)
+                # st.write('max_index_rot:', max_index_rot)
+                dot_index_rot = max_index_rot[np.argmax(diff_of_diff_rot[max_index_rot, [0, 1, 2]])] + 1
+            else:
+                dot_index_rot = 0
+            st.write('dot_index_rot:', dot_index_rot)
 
-        sum_of_5 = np.round(scores[:dot_index].sum(), 4)
-        sum_of_5_rot = np.round(scores_rot[:dot_index_rot].sum(), 4)
-        if sum_of_5 >= sum_of_5_rot:
-            boxes, scores, predicted_labels = boxes, scores, predicted_labels
-            new_im = new_im
-            dot_index = dot_index
-        else:
-            boxes, scores, predicted_labels = boxes_rot, scores_rot, predicted_labels_rot
-            new_im = new_im_rot
-            dot_index = dot_index_rot
-        predicted_labels.insert(dot_index, ',')
+            sum_of_5 = np.round(scores[:dot_index].sum(), 4)
+            sum_of_5_rot = np.round(scores_rot[:dot_index_rot].sum(), 4)
+            if sum_of_5 >= sum_of_5_rot:
+                boxes, scores, predicted_labels = boxes, scores, predicted_labels
+                new_im = new_im
+                dot_index = dot_index
+            else:
+                boxes, scores, predicted_labels = boxes_rot, scores_rot, predicted_labels_rot
+                new_im = new_im_rot
+                dot_index = dot_index_rot
+
+            if dot_index in [4, 5, 6]:
+                predicted_labels.insert(dot_index, ',')
+            else:
+                if len(predicted_labels) == 5:
+                    predicted_labels.insert(5, ', 0 0 0')
+                elif len(predicted_labels) >= 8:
+                    predicted_labels.insert(5, ',')
+                else:
+                    pass
 
         st.write('Показания ПУ:')
         st.image(new_im)
