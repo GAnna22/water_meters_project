@@ -44,9 +44,8 @@ import numpy as np
 def preprocess_image(img):
     # Преобразуем изображение в серой масштаб
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
     # Улучшение контраста с помощью линейной коррекции глобального среднего значения
-    alpha = 1.5
+    alpha = 1.2
     beta = -40
     clahe = cv2.createCLAHE(clipLimit=alpha, tileGridSize=(8, 8))
     enhanced_contrast = clahe.apply(gray)
@@ -105,6 +104,16 @@ def canny_edge_detection(enhanced_contrast):
         edges = apply_mask(edges, mask)
     return edges
 
+
+def blur_image(im):
+    # Преобразование изображения в оттенки серого
+    gray_image = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+    # Применение фильтра Гаусса для уменьшения бликов
+    blurred_image = cv2.GaussianBlur(gray_image, (0, 0), 10)
+    # Восстановление цветового изображения
+    restored_image = cv2.cvtColor(blurred_image, cv2.COLOR_GRAY2BGR)
+    return restored_image
+
 def find_rotation_angle(image):
     # Функция поиска и удаления выбросов
     def reject_outliers(data, m=1.1):
@@ -116,7 +125,7 @@ def find_rotation_angle(image):
 
     # Определение линий с помощью преобразования Хафа
     lines = cv2.HoughLinesP(edges, 1, np.pi / 180,
-                            threshold=100, minLineLength=100, maxLineGap=10)  # 80, 50, 10
+                            threshold=100, minLineLength=100, maxLineGap=10)  # 100, 100, 10
 
     # Вычисление угла поворота линий относительно горизонта
     if lines is not None:
