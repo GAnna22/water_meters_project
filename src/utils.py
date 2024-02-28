@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import streamlit as st
 
 # def find_rotation_angle(image):
 #     # Функция поиска и удаления выбросов
@@ -70,7 +71,7 @@ def blur_roi(roi, kernel_size=7):
     return blurred_roi
 
 
-def mask_roi(blurred_roi, threshold=1.5):
+def mask_roi(blurred_roi, enhanced_contrast, threshold=1.5):
     _, binary_mask = cv2.threshold(blurred_roi, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     _, contours, hierarchy = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     area_thresh = int(np.mean([c.area for c in contours]) * threshold)
@@ -79,7 +80,7 @@ def mask_roi(blurred_roi, threshold=1.5):
     if len(filtered_contours) != 0:
         largest_contour = max(filtered_contours, key=lambda x: cv2.contourArea(x))
         x, y, w, h = cv2.boundingRect(largest_contour)
-        mask = np.zeros_like(enhanced_constrast)
+        mask = np.zeros_like(enhanced_contrast)
         cv2.rectangle(mask, (x, y), (x + w, y + h), 255, -1)
 
         return mask
@@ -100,7 +101,7 @@ def canny_edge_detection(enhanced_contrast):
     roi = detect_barcodes(enhanced_contrast)
     if roi is not None:
         blurred_roi = blur_roi(roi)
-        mask = mask_roi(blurred_roi)
+        mask = mask_roi(blurred_roi, enhanced_contrast)
         edges = apply_mask(edges, mask)
     return edges
 
