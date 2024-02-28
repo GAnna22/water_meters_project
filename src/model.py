@@ -80,22 +80,30 @@ if uploaded_file is not None:
     image = transform_(image).to(DEVICE)
     output = st.session_state.water_meters_model(image.unsqueeze(0))
     image = (image.cpu()*255).type(torch.uint8)
-    boxes = transforms.ToTensor()(output[0]['boxes'].detach().cpu().numpy()[
+    bboxes = transforms.ToTensor()(output[0]['boxes'].detach().cpu().numpy()[
         output[0]['scores'].detach().cpu().numpy() > THRESHOLD])[0]
     images = [
         draw_bounding_boxes(image,
-                            boxes=boxes,
-                            width=3, colors=['blue']*len(boxes))
+                            boxes=bboxes,
+                            width=3, colors=['blue']*len(bboxes))
     ]
     st.write('Изображение с рамкой вокруг счетчика(-ов):')
     show(images)
 
     image = torch.permute(image, (1, 2, 0)).numpy()
-    for ind, box in enumerate(boxes):
+    ind = 0
+    while 0 <= ind <= len(bboxes):
+        if ind == 0 and len(bboxes) == 0:
+            sub_image = image
+        elif ind > 0 and ind == len(bboxes):
+            ind += 1
+            continue
+        else:
+            box = bboxes[ind]
+            bbox = [item.item() for item in box.cpu().data]
+            sub_image = image[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2])]
         st.markdown("""---""")
-        st.write(f'**Счетчик № {ind+1}**')
-        bbox = [item.item() for item in box.cpu().data]
-        sub_image = image[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2])]
+        st.write(f'**Счетчик № {ind + 1}**')
         size_max = max(sub_image.shape[:2])
         sub_image_sq = cv2.resize(sub_image,
                                   dsize=(size_max, size_max),
@@ -120,7 +128,7 @@ if uploaded_file is not None:
                                     width=3, colors=['blue']*len(bbox2))
             ]
             return sub_image, bbox2, images
-        
+
         sub_image_rot = rotate_image(sub_image, 180)
         sub_image, bbox2, images = give_images_with_boxes(sub_image)
         sub_image_rot, bbox2_rot, images_rot = give_images_with_boxes(sub_image_rot)
@@ -143,9 +151,9 @@ if uploaded_file is not None:
             sub_image2 = sub_image2.resize(new_image_size, Image.LANCZOS)
             new_im = Image.new("RGB", (FINAL_SIZE, FINAL_SIZE))
             new_im.paste(sub_image2, ((FINAL_SIZE-new_image_size[0])//2,
-                                        (FINAL_SIZE-new_image_size[1])//2))
+                                      (FINAL_SIZE-new_image_size[1])//2))
             return new_im
-        
+
         new_im = create_new_im(sub_image, bbox2)
         new_im_rot = create_new_im(sub_image_rot, bbox2_rot)
 
@@ -166,7 +174,7 @@ if uploaded_file is not None:
 
             boxes_diff = boxes[sort_index][1:, 0] - boxes[sort_index][:-1, 0]
             boxes_diff_median = np.median(boxes_diff)
-            pop_index = np.where(boxes_diff < 0.7*boxes_diff_median)[0] + 1
+            pop_index = np.where(boxes_diff < 0.5*boxes_diff_median)[0] + 1
             for p in pop_index[::-1]:
                 sort_index.pop(p)
             # for b, l in zip(boxes[sort_index], labels[sort_index]-1):
@@ -249,3 +257,4 @@ if uploaded_file is not None:
         st.write('Показания ПУ:')
         st.image(new_im)
         st.write(f"Результат распознавания: **{' '.join(predicted_labels)}**")
+        ind += 1
