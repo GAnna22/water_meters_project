@@ -96,8 +96,15 @@ def apply_mask(edges, mask):
         return edges
 
 
-def canny_edge_detection(enhanced_contrast):
-    edges = cv2.Canny(enhanced_contrast, threshold1=80, threshold2=180)
+def canny_edge_detection(enhanced_contrast, shape):
+    if shape <= 180:
+        threshold1 = 70
+        threshold2 = 150
+    else:
+        threshold1 = 80
+        threshold2 = 180
+    edges = cv2.Canny(enhanced_contrast,
+                      threshold1=threshold1, threshold2=threshold2)
     roi = detect_barcodes(enhanced_contrast)
     if roi is not None:
         blurred_roi = blur_roi(roi)
@@ -121,12 +128,21 @@ def find_rotation_angle(image):
         return data[abs(data - np.median(data)) < m * np.std(data)]
 
     # Преобразование изображения в оттенки серого
+    shape = image.shape[0]
+    st.write('shape:', shape)
     gray = preprocess_image(image)
-    edges = canny_edge_detection(gray)
-
+    edges = canny_edge_detection(gray, shape)
+    if shape <= 180:
+        threshold = 70
+        minLineLength = 70
+    else:
+        threshold = 100
+        minLineLength = 100
     # Определение линий с помощью преобразования Хафа
     lines = cv2.HoughLinesP(edges, 1, np.pi / 180,
-                            threshold=100, minLineLength=100, maxLineGap=10)  # 100, 100, 10
+                            threshold=threshold,
+                            minLineLength=minLineLength,
+                            maxLineGap=10)  # 100, 100, 10
 
     # Вычисление угла поворота линий относительно горизонта
     if lines is not None:

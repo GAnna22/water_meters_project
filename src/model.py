@@ -121,12 +121,16 @@ if uploaded_file is not None:
             sub_image = transform_(sub_image).to(DEVICE)
             output2 = st.session_state.digits_zone_model(sub_image.unsqueeze(0))
             sub_image = (sub_image.cpu()*255).type(torch.uint8)
-            bbox2 = output2[0]['boxes'][[0]]
-            images = [
-                draw_bounding_boxes(sub_image,
-                                    boxes=bbox2,
-                                    width=3, colors=['blue']*len(bbox2))
-            ]
+            if len(output2[0]['boxes']) == 0:
+                bbox2 = None
+                images  = [sub_image]
+            else:
+                bbox2 = output2[0]['boxes'][[0]]
+                images = [
+                    draw_bounding_boxes(sub_image,
+                                        boxes=bbox2,
+                                        width=3, colors=['blue']*len(bbox2))
+                ]
             return sub_image, bbox2, images
 
         sub_image_rot = rotate_image(sub_image, 180)
@@ -154,18 +158,28 @@ if uploaded_file is not None:
                                       (FINAL_SIZE-new_image_size[1])//2))
             return new_im
 
-        new_im = create_new_im(sub_image, bbox2)
-        new_im_rot = create_new_im(sub_image_rot, bbox2_rot)
-
-        with torch.no_grad():
-            prediction = st.session_state.detection_model(
-                [transforms.ToTensor()(new_im).to(DEVICE)])
-            prediction_rot = st.session_state.detection_model(
-                [transforms.ToTensor()(new_im_rot).to(DEVICE)])
+        if bbox2 is not None:
+            new_im = create_new_im(sub_image, bbox2)
+            with torch.no_grad():
+                prediction = st.session_state.detection_model(
+                    [transforms.ToTensor()(new_im).to(DEVICE)])
+        else:
+            prediction = None
+            new_im = None
+        if bbox2_rot is not None:
+            new_im_rot = create_new_im(sub_image_rot, bbox2_rot)
+            with torch.no_grad():
+                prediction_rot = st.session_state.detection_model(
+                    [transforms.ToTensor()(new_im_rot).to(DEVICE)])
+        else:
+            prediction_rot = None
+            new_im_rot = None
 
         THRESHOLD_2 = 0.5
 
         def get_predicted_labels(prediction, new_im):
+            if (new_im is None) or (prediction is None):
+                return [], [], []
             scores = prediction[0]['scores'].detach().cpu().numpy()
             boxes = prediction[0]['boxes'].detach().cpu().numpy()[scores > THRESHOLD_2]
             labels = prediction[0]['labels'].detach().cpu().numpy()[scores > THRESHOLD_2]
@@ -183,9 +197,6 @@ if uploaded_file is not None:
             predicted_labels = list(map(str, labels[sort_index] - 1))
             return boxes[sort_index], scores[sort_index].round(2), predicted_labels
 
-        boxes, scores, predicted_labels = get_predicted_labels(prediction, new_im)
-        boxes_rot, scores_rot, predicted_labels_rot = get_predicted_labels(prediction_rot, new_im_rot)
-
         def define_mode(data):
             mode_counter = np.bincount(data)
             max_counter = np.max(mode_counter)
@@ -200,6 +211,9 @@ if uploaded_file is not None:
                                            np.median(box_im[:, :, 1]),
                                            np.median(box_im[:, :, 2])])
             return np.array(boxes_median_color)
+
+        boxes, scores, predicted_labels = get_predicted_labels(prediction, new_im)
+        boxes_rot, scores_rot, predicted_labels_rot = get_predicted_labels(prediction_rot, new_im_rot)
 
         boxes_median_color = define_dot_index(new_im, boxes)
         boxes_median_color_rot = define_dot_index(new_im_rot, boxes_rot)
@@ -253,7 +267,7 @@ if uploaded_file is not None:
                 else:
                     pass
 
-        st.write('Показания ПУ:')
-        st.image(new_im)
-        st.write(f"Результат распознавания: **{' '.join(predicted_labels)}**")
+            st.write('Показания ПУ:')
+            st.image(new_im)
+            st.write(f"Результат распознавания: **{' '.join(predicted_labels)}**")
         ind += 1
