@@ -117,25 +117,46 @@ if uploaded_file is not None:
         st.write('Повернутое изображение:')
         st.image(sub_image)
 
-        def give_images_with_boxes(sub_image):
+        def give_images_with_boxes(sub_image, counter):
             sub_image = transform_(sub_image).to(DEVICE)
             output2 = st.session_state.digits_zone_model(sub_image.unsqueeze(0))
             sub_image = (sub_image.cpu()*255).type(torch.uint8)
+            if counter >= 5:
+                return sub_image, None, [sub_image]
             if len(output2[0]['boxes']) == 0:
                 bbox2 = None
                 images  = [sub_image]
             else:
                 bbox2 = output2[0]['boxes'][[0]]
-                images = [
-                    draw_bounding_boxes(sub_image,
-                                        boxes=bbox2,
-                                        width=3, colors=['blue']*len(bbox2))
-                ]
+                ratio = (
+                        (int(bbox2[0][2]) - int(bbox2[0][0]))/
+                        (int(bbox2[0][3]) - int(bbox2[0][1]))
+                         )
+                st.write('ratio:', ratio)
+                if ratio < 2.5:
+                    sub_image = torch.permute(sub_image, (1, 2, 0)).numpy()
+                    sub_image_lines, angle = find_rotation_angle(
+                        sub_image[
+                        int(bbox2[0][1]):int(bbox2[0][3]),
+                        int(bbox2[0][0]):int(bbox2[0][2])
+                        ])
+                    st.image(sub_image_lines)
+                    st.write('angle_second_chance:', angle)
+                    sub_image = rotate_image(sub_image, angle)
+                    sub_image, bbox2, _ = give_images_with_boxes(sub_image, counter + 1)
+                if bbox2 is not None:
+                    images = [
+                        draw_bounding_boxes(sub_image,
+                                            boxes=bbox2,
+                                            width=3, colors=['blue']*len(bbox2))
+                    ]
+                else:
+                    images = [sub_image]
             return sub_image, bbox2, images
 
         sub_image_rot = rotate_image(sub_image, 180)
-        sub_image, bbox2, images = give_images_with_boxes(sub_image)
-        sub_image_rot, bbox2_rot, images_rot = give_images_with_boxes(sub_image_rot)
+        sub_image, bbox2, images = give_images_with_boxes(sub_image, 0)
+        sub_image_rot, bbox2_rot, images_rot = give_images_with_boxes(sub_image_rot, 0)
 
         st.write('Изображение с рамкой вокруг показаний:')
         col1, col2 = st.columns(2)
