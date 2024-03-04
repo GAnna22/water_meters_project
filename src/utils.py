@@ -128,8 +128,7 @@ def find_rotation_angle(image):
         return data[abs(data - np.median(data)) < m * np.std(data)]
 
     # Преобразование изображения в оттенки серого
-    shape = image.shape[0]
-    st.write('shape:', shape)
+    shape = max(image.shape[:2])
     gray = preprocess_image(image)
     edges = canny_edge_detection(gray, shape)
     if shape <= 180:
@@ -145,11 +144,12 @@ def find_rotation_angle(image):
                             maxLineGap=10)  # 100, 100, 10
 
     # Вычисление угла поворота линий относительно горизонта
+    image_copy = image.copy()
     if lines is not None:
         angles = []
         for ind, line in enumerate(lines):
             x1, y1, x2, y2 = line[0]
-            cv2.line(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.line(image_copy, (x1, y1), (x2, y2), (0, 255, 0), 2)
             angle = np.arctan2((y2 - y1), (x2 - x1)) * 180.0 / np.pi
             angles.append(angle)
         if len(angles) >= 2:
@@ -162,7 +162,7 @@ def find_rotation_angle(image):
             median_angle = None
     else:
         median_angle = None
-    return image, median_angle
+    return image_copy, median_angle
 
 def rotate_image(image, angle):
     # Поворот исходного изображения на найденный угол
