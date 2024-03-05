@@ -75,7 +75,7 @@ if uploaded_file is not None:
     image1.save('../data/' + uploaded_file.name)
     image = np.array(image1)
     SIZE_ORIGINAL = image.shape[:2]
-    THRESHOLD = 0.85
+    THRESHOLD = 0.6
 
     image = transform_(image).to(DEVICE)
     output = st.session_state.water_meters_model(image.unsqueeze(0))
@@ -278,7 +278,7 @@ if uploaded_file is not None:
                 new_im = new_im_rot
                 dot_index = dot_index_rot
 
-            if dot_index in [4, 5, 6]:
+            if dot_index in [4, 5]:
                 predicted_labels.insert(dot_index, ',')
             else:
                 if len(predicted_labels) == 5:
