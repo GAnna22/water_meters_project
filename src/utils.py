@@ -129,11 +129,12 @@ def find_rotation_angle(image):
 
     # Преобразование изображения в оттенки серого
     shape = max(image.shape[:2])
+    st.write('shape:', shape)
     gray = preprocess_image(image)
     edges = canny_edge_detection(gray, shape)
     if shape <= 180:
-        threshold = 70
-        minLineLength = 70
+        threshold = 50
+        minLineLength = 60
     else:
         threshold = 100
         minLineLength = 100
