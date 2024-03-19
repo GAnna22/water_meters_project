@@ -268,8 +268,12 @@ if uploaded_file is not None:
                 dot_index_rot = 0
             st.write('dot_index_rot:', dot_index_rot)
 
-            sum_of_5 = np.round(scores[:dot_index].sum(), 4)
-            sum_of_5_rot = np.round(scores_rot[:dot_index_rot].sum(), 4)
+            if len(predicted_labels) == 5 or len(predicted_labels_rot) == 5:
+                sum_of_5 = np.round(scores[:5].sum(), 4)
+                sum_of_5_rot = np.round(scores_rot[:5].sum(), 4)
+            else:
+                sum_of_5 = np.round(scores[:dot_index].sum(), 4)
+                sum_of_5_rot = np.round(scores_rot[:dot_index_rot].sum(), 4)
             if sum_of_5 >= sum_of_5_rot:
                 boxes, scores, predicted_labels = boxes, scores, predicted_labels
                 new_im = new_im
