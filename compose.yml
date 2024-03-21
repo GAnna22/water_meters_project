@@ -1,0 +1,13 @@
+version: "3.11"
+
+services:
+  ui:
+    image: water_meters_ui
+    build:
+      context: ./
+    ports:
+      - "8501:8501"
+    volumes:
+      - type: bind
+        source: /Users/ganna_22/Documents/PyCharmProjests/water_meters_project/data
+        target: /app/data

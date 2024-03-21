@@ -72,7 +72,7 @@ if uploaded_file is not None:
     bytes_data = uploaded_file.getvalue()
     image1 = Image.open(io.BytesIO(bytes_data))
     image1 = ImageOps.exif_transpose(image1)
-    # image1.save('../data/' + uploaded_file.name)
+    image1.save('./data/' + uploaded_file.name)
     image = np.array(image1)
     SIZE_ORIGINAL = image.shape[:2]
     THRESHOLD = 0.6
@@ -121,7 +121,7 @@ if uploaded_file is not None:
             sub_image = transform_(sub_image).to(DEVICE)
             output2 = st.session_state.digits_zone_model(sub_image.unsqueeze(0))
             sub_image = (sub_image.cpu()*255).type(torch.uint8)
-            if counter >= 5:
+            if counter >= 3:
                 return sub_image, None, [sub_image]
             if len(output2[0]['boxes']) == 0:
                 bbox2 = None
