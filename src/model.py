@@ -72,7 +72,7 @@ if uploaded_file is not None:
     bytes_data = uploaded_file.getvalue()
     image1 = Image.open(io.BytesIO(bytes_data))
     image1 = ImageOps.exif_transpose(image1)
-    image1.save('./data/' + uploaded_file.name)
+    # image1.save('./data/' + uploaded_file.name)
     image = np.array(image1)
     SIZE_ORIGINAL = image.shape[:2]
     THRESHOLD = 0.6
@@ -133,7 +133,7 @@ if uploaded_file is not None:
                         (int(bbox2[0][3]) - int(bbox2[0][1]))
                          )
                 st.write('ratio:', ratio)
-                if ratio < 2.5:
+                if 0 < ratio < 2.5:
                     sub_image = torch.permute(sub_image, (1, 2, 0)).numpy()
                     sub_image_lines, angle = find_rotation_angle(
                         sub_image[
@@ -200,7 +200,7 @@ if uploaded_file is not None:
 
         def get_predicted_labels(prediction, new_im):
             if (new_im is None) or (prediction is None):
-                return [], [], []
+                return np.array([]), np.array([]), np.array([])
             scores = prediction[0]['scores'].detach().cpu().numpy()
             boxes = prediction[0]['boxes'].detach().cpu().numpy()[scores > THRESHOLD_2]
             labels = prediction[0]['labels'].detach().cpu().numpy()[scores > THRESHOLD_2]
@@ -295,5 +295,6 @@ if uploaded_file is not None:
 
             st.write('Показания ПУ:')
             st.image(new_im)
+            new_im.save('../data/' + str(ind) + '_' + uploaded_file.name)
             st.write(f"Результат распознавания: **{' '.join(predicted_labels)}**")
         ind += 1

@@ -125,7 +125,7 @@ def blur_image(im):
 def find_rotation_angle(image):
     # Функция поиска и удаления выбросов
     def reject_outliers(data, m=1.1):
-        return data[abs(data - np.median(data)) < m * np.std(data)]
+        return data[abs(data - np.median(data)) <= m * np.std(data)]
 
     # Преобразование изображения в оттенки серого
     shape = max(image.shape[:2])
